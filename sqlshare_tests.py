@@ -13,12 +13,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
-# Check for settings in file sqlshare_settings.py, otherwise use defaults
+# Check for settings in file sqlshare_settings.py,
 if os.path.isfile("sqlshare_settings.py"):
     from sqlshare_settings import settings
     
 
-# Get Username and password from env
+# Get Username and password from env if no settings file and from user if no env vars
 username = None
 password = None
 if settings and not ('username' in settings.keys()):
@@ -51,6 +51,7 @@ def get_test_class():
     for attr in default_settings.keys():
         setattr(klass, attr, default_settings[attr])
 
+    # Settings file
     if settings:
         for attr in settings.keys():
             setattr(klass, attr, settings[attr])
@@ -70,15 +71,15 @@ class SQLShareTests(unittest.TestCase):
         
     def sqlshare_login(self):
         # Logs into the sqlshare login page
-        buttons = self.getElements("div.sql-wayf-login button")
+        buttons = self.get_elements("div.sql-wayf-login button")
         if self.login_type == 'uw':
             buttons[0].click()
 
-            self.getElement("input#weblogin_netid").send_keys(self.username)
-            self.getElement("input#weblogin_password").send_keys(self.password)
-            self.getElement("ul.submit input").click()
+            self.get_element("input#weblogin_netid").send_keys(self.username)
+            self.get_element("input#weblogin_password").send_keys(self.password)
+            self.get_element("ul.submit input").click()
 
-            self.getElement("input.btn-primary").click()
+            self.get_element("input.btn-primary").click()
             
         elif self.login_type == 'google':
             buttons[1].click()
@@ -91,7 +92,7 @@ class SQLShareTests(unittest.TestCase):
         self.driver.quit()
 
     # Driver methods
-    def getElement(self, selector, by_method=By.CSS_SELECTOR, source=None):
+    def get_element(self, selector, by_method=By.CSS_SELECTOR, source=None):
         if source is None:
             source = self.driver
             
@@ -99,7 +100,7 @@ class SQLShareTests(unittest.TestCase):
         WebDriverWait(source, 10).until(EC.visibility_of(element))
         return element
 
-    def getElements(self, selector, by_method=By.CSS_SELECTOR, source=None):
+    def get_elements(self, selector, by_method=By.CSS_SELECTOR, source=None):
         if source is None:
             source = self.driver
             
@@ -115,7 +116,7 @@ class SQLShareTests(unittest.TestCase):
     
     # Page Interaction
     def click_sidebar_link(self, link_text):
-        links = self.getElements("div.sql-sidebar-actions a")
+        links = self.get_elements("div.sql-sidebar-actions a")
         for link in links:
             if link.text.lower().strip() == link_text.lower():
                 link.click()
@@ -124,13 +125,13 @@ class SQLShareTests(unittest.TestCase):
         raise Exception('Link "' + link_text + '" not found in sidebar')
 
     def get_databases(self):
-        database_elements = self.getElements("div.sql-dataset-list a.sql-dataset-list-item")
+        database_elements = self.get_elements("div.sql-dataset-list a.sql-dataset-list-item")
         
         databases = []
         for element in database_elements:
-            name = self.getElement("span.sql-dataset-name",           source=element).text
-            ownr = self.getElement("span.sql-dataset-owner-modified", source=element).text
-            desc = self.getElement( "div.sql-dataset-desc",           source=element).text
+            name = self.get_element("span.sql-dataset-name",           source=element).text
+            ownr = self.get_element("span.sql-dataset-owner-modified", source=element).text
+            desc = self.get_element( "div.sql-dataset-desc",           source=element).text
 
             index = ownr.index(' ')
             date_string = ownr[(index + 1):]
@@ -143,8 +144,8 @@ class SQLShareTests(unittest.TestCase):
     def new_query(self):
         self.click_sidebar_link("New Query")
 
-        self.getElement("div.form-group textarea#query_sql").send_keys(self.query)
-        self.getElement("div.form-group button#run_query").click()
+        self.get_element("div.form-group textarea#query_sql").send_keys(self.query)
+        self.get_element("div.form-group button#run_query").click()
 
         if not (hasattr(self, 'new_query_action')):
             raise Exception("New query action must be specified")
@@ -160,17 +161,17 @@ class SQLShareTests(unittest.TestCase):
 
 
     def download_dataset():
-        self.getElement("div.sql-dataset-actions button#download_query").click()
+        self.get_element("div.sql-dataset-actions button#download_query").click()
         # to do
 
     def save_dataset():
-        self.getElement("div.sql-dataset-actions button.class btn-sm").click()
+        self.get_element("div.sql-dataset-actions button.class btn-sm").click()
 
-        form = self.getElement("form")
+        form = self.get_element("form")
 
-        self.getElement("input#blah1", source=form).send_keys(self.dataset_name)
-        self.getElement("input#blah2", source=form).send_keys(self.dataset_desc)
-        checkbox = self.getElement("div.checkbox input ")
+        self.get_element("input#blah1", source=form).send_keys(self.dataset_name)
+        self.get_element("input#blah2", source=form).send_keys(self.dataset_desc)
+        checkbox = self.get_element("div.checkbox input ")
         if (self.dataset_public and not checkbox.is_selected()) or (not self.dataset_public and checkbox.is_selected()):
             checkbox.click()
 
@@ -182,13 +183,13 @@ class SQLShareTests(unittest.TestCase):
     def get_recent_queries(self):
         self.click_sidebar_link("Recent Queries")
 
-        query_elements = self.getElements("div.sql-query-list a.sql-query-list-item")
+        query_elements = self.get_elements("div.sql-query-list a.sql-query-list-item")
 
         queries = []
         for element in query_elements:
-            code   = self.getElement("span.sql-query-code",   source=element).text.strip()
-            date   = self.getElement("span.sql-query-date",   source=element).text.strip()
-            status = self.getElement("span.sql-query-status", source=element).text.strip()
+            code   = self.get_element("span.sql-query-code",   source=element).text.strip()
+            date   = self.get_element("span.sql-query-date",   source=element).text.strip()
+            status = self.get_element("span.sql-query-status", source=element).text.strip()
 
             _date = datetime.strptime(date, self.date_format)
 
