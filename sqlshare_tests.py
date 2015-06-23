@@ -17,36 +17,45 @@ from selenium.webdriver.support import expected_conditions as EC
 if os.path.isfile("sqlshare_settings.py"):
     from sqlshare_settings import settings
     
-else:
-    # Get Username and password from env
+
+# Get Username and password from env
+username = None
+password = None
+if settings and not ('username' in settings.keys()):
     try:
         username = os.environ['SQLSHARE_USERNAME']
     except KeyError:
         username = input("Username: ")
 
+if settings and not ('password' in settings.keys()):
     try:
         password = os.environ['SQLSHARE_PASSWORD']
     except KeyError:    
         password = getpass.getpass()
-    
-    settings = {
-        'browser'    : 'Chrome', # Could be Chrome, Firefox, PhantomJS, etc...
-        'url'        : 'https://sqlshare-test.s.uw.edu',
-        'login_type' : 'uw',
-        'username'   : username,
-        'password'   : password,
-        'date_format': "%a, %d %b %Y %H:%M:%S %Z",
 
-    }
+        
+default_settings = {
+    'browser'    : 'Chrome', # Could be Chrome, Firefox, PhantomJS, etc...
+    'url'        : 'https://sqlshare-test.s.uw.edu',
+    'login_type' : 'uw',
+    'username'   : username,
+    'password'   : password,
+    'date_format': "%a, %d %b %Y %H:%M:%S %Z",
+    
+}
 
 def get_test_class():
     klass = SQLShareTests()
-    for attr in settings.keys():
-        setattr(klass, attr, settings[attr])
+
+    # Set defualts first
+    for attr in default_settings.keys():
+        setattr(klass, attr, default_settings[attr])
+
+    if settings:
+        for attr in settings.keys():
+            setattr(klass, attr, settings[attr])
 
     return klass
-
-
 
 
 class SQLShareTests(unittest.TestCase):    
