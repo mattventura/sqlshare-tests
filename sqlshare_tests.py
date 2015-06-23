@@ -7,27 +7,34 @@ import getpass
 
 from datetime import datetime
 
+
 from selenium import webdriver
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+
+from selenium.webdriver.common.action_chains import ActionChains as AC
 
 
 # Check for settings in file sqlshare_settings.py,
 if os.path.isfile("sqlshare_settings.py"):
     from sqlshare_settings import settings
+else:
+    settings = {}
     
 
 # Get Username and password from env if no settings file and from user if no env vars
 username = None
 password = None
-if settings and not ('username' in settings.keys()):
+if not ('username' in settings.keys()):
     try:
         username = os.environ['SQLSHARE_USERNAME']
     except KeyError:
         username = input("Username: ")
 
-if settings and not ('password' in settings.keys()):
+if not ('password' in settings.keys()):
     try:
         password = os.environ['SQLSHARE_PASSWORD']
     except KeyError:    
@@ -44,31 +51,65 @@ default_settings = {
     
 }
 
-def get_test_class():
+test_new_query_params = {
+    'query' : "SELECT * FROM [charlon].[IM ON A BUS]",
+    'new_query_action' : "save",
+    'dataset_name' : "Test Dataset",
+    'dataset_desc' : "Test description",
+    'dataset_public': False,
+}
+
+test_file_upload_params = {
+    'filename' : "/home/matt/sqlshare/csv/d3.csv",
+    'dataset_name' : "Upload Test",
+    'dataset_desc' : "Upload description",
+    'dataset_public' : True
+}
+    
+
+def get_test_class(test_params=None):
     klass = SQLShareTests()
 
-    # Set defualts first
-    for attr in default_settings.keys():
-        setattr(klass, attr, default_settings[attr])
-
-    # Settings file
-    if settings:
-        for attr in settings.keys():
-            setattr(klass, attr, settings[attr])
+    # Settings to be added in order (defaults, file, test params)
+    to_add = [default_settings, settings, test_params]
+    for attr_set in to_add:
+        for attr in attr_set.keys():
+            setattr(klass, attr, attr_set[attr])
 
     return klass
 
 
-class SQLShareTests(unittest.TestCase):    
 
-    # Test auxillary methods
-    def setUp(self):
-        self.driver = getattr(webdriver, self.browser)()
-        self.driver.get(self.url)
+class SQLShareSite:
 
-        self.sqlshare_login()
-
+    # Driver methods
+    def get_element(self, selector, by_method=By.CSS_SELECTOR, source=None, ignore_visibility=False):
+        if source is None:
+            source = self.driver
+            
+        element = WebDriverWait(source, 10).until(EC.presence_of_element_located((by_method, selector)))
         
+        if not ignore_visibility:
+            WebDriverWait(source, 10).until(EC.visibility_of(element))
+            
+        return element
+
+    def get_elements(self, selector, by_method=By.CSS_SELECTOR, source=None, ignore_visibility=False):
+        if source is None:
+            source = self.driver
+            
+        elements = WebDriverWait(source, 10).until(EC.presence_of_all_elements_located((by_method, selector)))
+        
+        if not ignore_visibility:
+            for element in elements:
+                try:
+                    WebDriverWait(source, 2).until(EC.visibility_of(element))
+                except TimeoutException:
+                    elements.remove(element)
+
+        return elements
+
+    # Page interaction
     def sqlshare_login(self):
         # Logs into the sqlshare login page
         buttons = self.get_elements("div.sql-wayf-login button")
@@ -86,35 +127,7 @@ class SQLShareTests(unittest.TestCase):
 
         else:
             raise Exception("No login type specified")
-
-
-    def tearDown(self):
-        self.driver.quit()
-
-    # Driver methods
-    def get_element(self, selector, by_method=By.CSS_SELECTOR, source=None):
-        if source is None:
-            source = self.driver
-            
-        element = WebDriverWait(source, 10).until(EC.presence_of_element_located((by_method, selector)))
-        WebDriverWait(source, 10).until(EC.visibility_of(element))
-        return element
-
-    def get_elements(self, selector, by_method=By.CSS_SELECTOR, source=None):
-        if source is None:
-            source = self.driver
-            
-        elements = WebDriverWait(source, 10).until(EC.presence_of_all_elements_located((by_method, selector)))
-        for element in elements:
-            try:
-                WebDriverWait(source, 2).until(EC.visibility_of(element))
-            except TimeoutException:
-                elements.remove(element)
-
-        return elements
-
     
-    # Page Interaction
     def click_sidebar_link(self, link_text):
         links = self.get_elements("div.sql-sidebar-actions a")
         for link in links:
@@ -144,8 +157,9 @@ class SQLShareTests(unittest.TestCase):
     def new_query(self):
         self.click_sidebar_link("New Query")
 
-        self.get_element("div.form-group textarea#query_sql").send_keys(self.query)
-        self.get_element("div.form-group button#run_query").click()
+        self.get_element("div.CodeMirror").click()
+        self.actions.send_keys(self.query).perform()
+        self.get_element("form button#run_query").click()
 
         if not (hasattr(self, 'new_query_action')):
             raise Exception("New query action must be specified")
@@ -159,21 +173,41 @@ class SQLShareTests(unittest.TestCase):
         else:
             raise Exception("New query action unknown")
 
+    def upload_dataset(self):
+        self.click_sidebar_link("Upload Dataset")
 
-    def download_dataset():
+        a_element = self.get_element("a#upload_dataset_browse")
+        self.get_element("*", source=a_element, ignore_visibility=True).send_keys(self.filename)
+
+        title_element = self.get_element("input#id_dataset_name")
+        title_element.clear()
+        title_element.send_keys(self.dataset_name)
+        
+        self.get_element("textarea#id_dataset_description").send_keys(self.dataset_desc)
+        
+        checkbox = self.get_element("div#final_settings_panel div.checkbox input")
+        if (self.dataset_public and not checkbox.is_selected()) or (not self.dataset_public and checkbox.is_selected()):
+            checkbox.click()
+
+        self.get_element("button#save_button").click()
+
+
+    def download_dataset(self):
         self.get_element("div.sql-dataset-actions button#download_query").click()
         # to do
 
-    def save_dataset():
-        self.get_element("div.sql-dataset-actions button.class btn-sm").click()
+    def save_dataset(self):
+        self.get_element("div.sql-dataset-actions button.btn-sm").click()
 
         form = self.get_element("form")
 
-        self.get_element("input#blah1", source=form).send_keys(self.dataset_name)
-        self.get_element("input#blah2", source=form).send_keys(self.dataset_desc)
-        checkbox = self.get_element("div.checkbox input ")
+        self.get_element("input#blah1",    source=form).send_keys(self.dataset_name)
+        self.get_element("textarea#blah2", source=form).send_keys(self.dataset_desc)
+        checkbox = self.get_element("div.checkbox input", source=form)
         if (self.dataset_public and not checkbox.is_selected()) or (not self.dataset_public and checkbox.is_selected()):
             checkbox.click()
+
+        self.get_element("button", source=form).click()
 
     def get_recent_datasets(self):
         self.click_sidebar_link("Recent Datasets")
@@ -196,3 +230,21 @@ class SQLShareTests(unittest.TestCase):
             queries.append({'code':code, 'date':_date, 'status':status})
 
         return queries
+
+
+
+class SQLShareTests(unittest.TestCase, SQLShareSite):
+    # Tests are located in this class
+
+    # Test auxillary methods
+    def setUp(self):
+        self.driver = getattr(webdriver, self.browser)()
+        self.driver.get(self.url)
+
+        self.actions = AC(self.driver)
+
+        self.sqlshare_login()
+
+    def tearDown(self):
+        self.driver.quit()
+
