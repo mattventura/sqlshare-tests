@@ -22,21 +22,6 @@ from selenium.webdriver.common.keys import Keys
 from sqlshare_settings import settings
 
 
-# Get Username and password from env if no settings file and from user if no env vars
-username = None
-password = None
-if not ('username' in settings.keys()):
-    try:
-        settings['username'] = os.environ['SQLSHARE_USERNAME']
-    except KeyError:
-        settings['username'] = input("Username: ")
-
-if not ('password' in settings.keys()):
-    try:
-        settings['password'] = os.environ['SQLSHARE_PASSWORD']
-    except KeyError:    
-        settings['password'] = getpass.getpass()
-
         
 class DriverMethods:
 
@@ -234,6 +219,16 @@ class PageActions:
 
         self.get_element("button#save_button").click()
 
+        time.sleep(5)
+        self.click_sidebar_link("Yours")
+        datasets = self.get_datasets()
+
+        names = []
+        for dataset in datasets:
+            names.append(dataset['name'].lower())
+
+        assert self.dataset_name.lower() in names
+
 
     def save_dataset(self):
         form = self.get_element("form")
@@ -273,9 +268,12 @@ class DatasetActions:
     def run_query(self):
         self.get_element("button#run_query").click()
 
-    def dataset_snapshot(self):
+    def snapshot_dataset(self):
         self.get_action_buttons()['SNAPSHOT'].click()
         self.save_dataset()
+
+    def download_dataset(self):
+        self.get_action_buttons()['DOWNLOAD'].click()
 
 
 
