@@ -5,6 +5,7 @@ from sqlshare_tests_c import *
 from sqlshare_settings import *
 
 import os
+import sys
 import unittest
 
 
@@ -33,7 +34,7 @@ class SQLShare(SQLShareTests):
     # Functional Tests
     def dataset_upload(self):
         for attr in ['filename', 'dataset_name', 'dataset_desc', 'dataset_public']:
-            setattr(self, attr, 'upload_' + attr)
+            setattr(self, attr, getattr(self, 'upload_' + attr))
 
         self.upload_dataset()
 
@@ -60,7 +61,7 @@ class SQLShare(SQLShareTests):
         os.remove("query_result.csv")
 
     # Dataset Tests
-    def dataset_privacy_toggle(self):
+    def dataset_toggle_privacy(self):
         self.open_dataset(self.existing_dataset)
         self.private_public_toggle()
 
@@ -69,14 +70,14 @@ class SQLShare(SQLShareTests):
         self.share_dataset()
 
     def dataset_delete(self):
-        self.delete_and_assert(self.delete_dataset)
+        self.delete_and_assert(self.to_delete_dataset)
         
     def dataset_download(self):
         self.open_dataset(self.existing_dataset)
         self.download_dataset()
 
-        assert os.path.isfile("query_result.csv")
-        os.remove("query_result.csv")
+        assert os.path.isfile("query_results.csv")
+        os.remove("query_results.csv")
 
     def dataset_snapshot(self):
         self.dataset_name = "Snapshot Dataset"
@@ -130,13 +131,13 @@ for setting_set in [test_config, settings]:
 
 # Upload test datasets
 sql = SQLShare()
-sql.setUp()
+#sql.setUp()
 
 for dataset in to_upload:
     for attr in ['filename', 'dataset_name', 'dataset_desc', 'dataset_public']:
         setattr(sql, attr, dataset[attr])
 
-    sql.upload_dataset()
+    #sql.upload_dataset()
 
 # Create and run suite
 suite = unittest.TestSuite()
@@ -144,7 +145,9 @@ suite = unittest.TestSuite()
 for test in to_run:
     suite.addTest(SQLShare(test))
 
-result = unittest.TestResult()    
-suite.run(result)
+result = unittest.TestResult(verbosity=2)
+runner = unittest.TextTestRunner(stream=sys.stdout)
+runner.run(suite)
+#suite.run(result)
 
-    
+

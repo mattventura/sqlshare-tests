@@ -7,7 +7,7 @@ csv_file_path = "/home/matt/Work/sqlshare_tests/csv/d3.csv"
 test_config = {
     # Datasets
     'existing_dataset' : "Test Dataset",
-    'delete_dataset'   : "Dataset to Delete",
+    'to_delete_dataset'   : "Dataset to Delete",
 
     # File upload
     'upload_filename'     : csv_file_path,
@@ -41,18 +41,22 @@ to_upload = [
 
 # Specify which tests to run
 to_run = [
+    # View Tests
     'view_your_datasets',
     'view_all_datasets',
+    'view_shared_datasets',
     'view_recent_datasets',
     'view_recent_queries',
+    # Functional Tests
     'dataset_upload',
     'save_new_query',
     'download_new_query',
-    'toggle_privacy',
-    'share_dataset',
-    'delete_dataset',
-    'download_dataset',
-    'snapshot_dataset',
+    # Dataset Tests
+    'dataset_toggle_privacy',
+    'dataset_share',
+    'dataset_delete',
+    'dataset_download',
+    'dataset_snapshot',
 ]
 
 # Various test settings

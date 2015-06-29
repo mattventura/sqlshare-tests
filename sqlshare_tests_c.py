@@ -99,7 +99,8 @@ class PageNavigation:
         datasets = self.get_datasets()
         for dataset in datasets:
             if dataset['name'].lower() == dataset_name.lower():
-                dataset['element'].click()
+                url = dataset['element'].get_attribute('href')
+                self.driver.get(url)
                 return
 
         raise Exception("Dataset with name \"" + dataset_name + "\" could not be found")
@@ -124,7 +125,6 @@ class GetMethods:
             dataset = {}
             for detail in selectors.keys():
                 dataset[detail] = self.get_element(selectors[detail], source=element).text.strip()
-                print(dataset[detail])
 
             # Convert date to datetime object
             date_string = dataset['date'][10:]
@@ -158,7 +158,7 @@ class GetMethods:
         for element in query_elements:
             query = {}
             for detail in selectors.keys():
-                query[detail] = self.get_element(selector, source=element).text.strip()
+                query[detail] = self.get_element(selectors[detail], source=element).text.strip()
 
             date_string = query['date']
             query['date'] = datetime.strptime(date_string, self.date_format)
@@ -169,11 +169,14 @@ class GetMethods:
     
 
     def get_action_buttons(self):
-        button_elements = self.get_elements("div.sql-dataset-actions button")
+        button_elements = self.get_elements("btn", by_method=By.CLASS_NAME)
         actions = {}
         for button in button_elements:
-            action = self.get_element("i span", source=button).text.strip()
-            actions[action] = button
+            try:
+                action = self.get_element("span", source=button).text.strip()
+                actions[action] = button
+            except TimeoutException:
+                pass
 
         return actions       
 
@@ -191,7 +194,7 @@ class PageActions:
             raise Exception("New query action must be specified")
 
         if self.new_query_action == 'save':
-            self.get_action_buttons()['SAVE DATASET']
+            self.get_action_buttons()['SAVE DATASET'].click()
             self.save_dataset()
             
         elif self.new_query_action == 'download':
