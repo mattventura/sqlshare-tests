@@ -57,8 +57,9 @@ class SQLShare(SQLShareTests):
 
         self.new_query()
 
-        assert os.path.isfile("query_result.csv")
-        os.remove("query_result.csv")
+        time.sleep(2)
+        assert os.path.isfile("query_results.csv")
+        os.remove("query_results.csv")
 
     # Dataset Tests
     def dataset_toggle_privacy(self):
@@ -76,6 +77,7 @@ class SQLShare(SQLShareTests):
         self.open_dataset(self.existing_dataset)
         self.download_dataset()
 
+        time.sleep(2)
         assert os.path.isfile("query_results.csv")
         os.remove("query_results.csv")
 
@@ -93,7 +95,8 @@ class SQLShare(SQLShareTests):
     def delete_and_assert(self, dataset_name):
         self.open_dataset(dataset_name)
         self.delete_dataset()
-
+        time.sleep(3)
+        
         self.assert_dataset_deleted(dataset_name)
 
     def assert_dataset_deleted(self, dataset_name):
@@ -131,14 +134,14 @@ for setting_set in [test_config, settings]:
 
 # Upload test datasets
 sql = SQLShare()
-#sql.setUp()
+sql.setUp()
 
 for dataset in to_upload:
     for attr in ['filename', 'dataset_name', 'dataset_desc', 'dataset_public']:
         setattr(sql, attr, dataset[attr])
 
-    #sql.upload_dataset()
-
+    sql.upload_dataset()
+    
 # Create and run suite
 suite = unittest.TestSuite()
 
@@ -149,5 +152,11 @@ result = unittest.TestResult(verbosity=2)
 runner = unittest.TextTestRunner(stream=sys.stdout)
 runner.run(suite)
 #suite.run(result)
+
+for dataset in to_upload:
+    dataset_name = dataset['dataset_name']
+    if dataset_name is not self.to_delete_dataset:
+        sql.open_dataset(dataset_name)
+        sql.delete_dataset()
 
 

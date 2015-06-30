@@ -29,10 +29,10 @@ class DriverMethods:
         if source is None:
             source = self.driver
             
-        element = WebDriverWait(source, 10).until(EC.presence_of_element_located((by_method, selector)))
+        element = WebDriverWait(source, self.driver_timeout).until(EC.presence_of_element_located((by_method, selector)))
         
         if not ignore_visibility:
-            WebDriverWait(source, 10).until(EC.visibility_of(element))
+            WebDriverWait(source, self.driver_timeout).until(EC.visibility_of(element))
             
         return element
     
@@ -41,12 +41,12 @@ class DriverMethods:
         if source is None:
             source = self.driver
             
-        elements = WebDriverWait(source, 10).until(EC.presence_of_all_elements_located((by_method, selector)))
+        elements = WebDriverWait(source, self.driver_timeout).until(EC.presence_of_all_elements_located((by_method, selector)))
         
         if not ignore_visibility:
             for element in elements:
                 try:
-                    WebDriverWait(source, 2).until(EC.visibility_of(element))
+                    WebDriverWait(source, self.driver_timeout).until(EC.visibility_of(element))
                 except TimeoutException:
                     elements.remove(element)
 
@@ -226,11 +226,8 @@ class PageActions:
     def upload_dataset(self):
         self.click_sidebar_link("Upload Dataset")
 
-        #a_element = self.get_element("a#upload_dataset_browse")
-        #self.get_element("*", source=a_element).send_keys(self.filename)
-
-        # Phantom JS fix
-        self.driver.execute_script("var page = this; page.uploadFile('a#upload_dataset_browse *', '" + self.filename + "');");
+        a_element = self.get_element("a#upload_dataset_browse")
+        self.get_element("*", source=a_element).send_keys(self.filename)
 
         title_element = self.get_element("input#id_dataset_name")
         title_element.clear()
@@ -244,7 +241,7 @@ class PageActions:
 
         self.get_element("button#save_button").click()
 
-        time.sleep(5)
+        time.sleep(10)
         self.click_sidebar_link("Yours")
         datasets = self.get_datasets()
 
@@ -258,8 +255,12 @@ class PageActions:
     def save_dataset(self):
         form = self.get_element("form")
 
-        self.get_element("input#blah1",    source=form).send_keys(self.dataset_name)
+        title_element = self.get_element("input#blah1", source=form)
+        title_element.clear()
+        title_element.send_keys(self.dataset_name)
+
         self.get_element("textarea#blah2", source=form).send_keys(self.dataset_desc)
+        
         checkbox = self.get_element("div.checkbox input", source=form)
         if (self.dataset_public and not checkbox.is_selected()) or (not self.dataset_public and checkbox.is_selected()):
             checkbox.click()
@@ -279,6 +280,7 @@ class DatasetActions:
             
     def share_dataset(self):
         self.get_action_buttons()['SHARE'].click()
+        time.sleep(3)
 
         for email in self.emails:
             self.get_element("input#exampleInputEmail1").send_keys(email + Keys.ENTER)
@@ -288,6 +290,7 @@ class DatasetActions:
         
     def delete_dataset(self):
         self.get_action_buttons()['DELETE'].click()
+        time.sleep(3)
         self.get_element("button#delete_dataset").click()
 
     def run_query(self):
@@ -310,18 +313,32 @@ class SQLShareSite(DriverMethods, PageNavigation, PageActions, GetMethods, Datas
 class SQLShareTests(unittest.TestCase, SQLShareSite):
 
     def setUp(self):
-        self.driver = getattr(webdriver, self.browser)()
+        if self.headless:
+            import pyvirtualdisplay
+            self.display = pyvirtualdisplay.Display()
+            self.display.start()
+
         if self.browser == "PhantomJS":
+            self.driver = webdriver.PhantomJS()
             self.driver.set_window_size(1120, 550)
-        
+
+        elif self.browser == "Chrome" and self.browser_options:
+            options = webdriver.ChromeOptions()
+            options.add_experimental_option("prefs", self.browser_options)
+            self.driver = webdriver.Chrome(chrome_options=options)
+
+        else:
+            self.driver = getattr(webdriver, self.browser)()
+
+            
         self.driver.get(self.url)
-
-
-
         self.actions = AC(self.driver)
-
         self.sqlshare_login()
 
         
     def tearDown(self):
         self.driver.quit()
+
+        if self.headless:
+            self.display.stop()
+
