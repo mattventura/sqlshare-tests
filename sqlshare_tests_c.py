@@ -84,7 +84,11 @@ class PageNavigation:
         raise Exception('Link "' + link_text + '" not found in sidebar')
 
     def scroll_to_bottom_of_datasets_page(self):
-        current = len(self.get_elements("a.sql-dataset-list-item"))
+        try:
+            current = len(self.get_elements("a.sql-dataset-list-item"))
+        except TimeoutException:
+            return
+        
         prior = -1
         while (prior != current):
             time.sleep(2)
@@ -117,18 +121,25 @@ class GetMethods:
         }
 
         self.scroll_to_bottom_of_datasets_page()
-        
-        dataset_elements = self.get_elements("a.sql-dataset-list-item")
-        
+
+        try:
+            dataset_elements = self.get_elements("a.sql-dataset-list-item")
+        except TimeoutException:
+            return {}
+            
         datasets = []
         for element in dataset_elements:
             dataset = {}
             for detail in selectors.keys():
-                dataset[detail] = self.get_element(selectors[detail], source=element).text.strip()
+                try:
+                    dataset[detail] = self.get_element(selectors[detail], source=element).text.strip()
+                except TimeoutException:
+                    dataset[detail] = None
 
             # Convert date to datetime object
-            date_string = dataset['date'][10:]
-            dataset['date'] = datetime.strptime(date_string, self.date_format)
+            if dataset['date'] is not None:
+                date_string = dataset['date'][10:]
+                dataset['date'] = datetime.strptime(date_string, self.date_format)
 
             dataset['element'] = element
                 
@@ -151,17 +162,25 @@ class GetMethods:
             'date'  : "span.sql-query-date",
             'status': "span.sql-query-status",
         }
-        
-        query_elements = self.get_elements("div.sql-query-list a.sql-query-list-item")
+
+        try:
+            query_elements = self.get_elements("div.sql-query-list a.sql-query-list-item")
+        except TimeoutException:
+            return {}
 
         queries = []
         for element in query_elements:
             query = {}
             for detail in selectors.keys():
-                query[detail] = self.get_element(selectors[detail], source=element).text.strip()
+                try:
+                    query[detail] = self.get_element(selectors[detail], source=element).text.strip()
+                except TimeoutException:
+                    query[detial] = None
 
-            date_string = query['date']
-            query['date'] = datetime.strptime(date_string, self.date_format)
+            # Convert date to datetime
+            if query['date'] is not None:
+                date_string = query['date']
+                query['date'] = datetime.strptime(date_string, self.date_format)
 
             queries.append(query)
             
@@ -207,8 +226,11 @@ class PageActions:
     def upload_dataset(self):
         self.click_sidebar_link("Upload Dataset")
 
-        a_element = self.get_element("a#upload_dataset_browse")
-        self.get_element("*", source=a_element).send_keys(self.filename)
+        #a_element = self.get_element("a#upload_dataset_browse")
+        #self.get_element("*", source=a_element).send_keys(self.filename)
+
+        # Phantom JS fix
+        self.driver.execute_script("var page = this; page.uploadFile('a#upload_dataset_browse *', '" + self.filename + "');");
 
         title_element = self.get_element("input#id_dataset_name")
         title_element.clear()
@@ -289,7 +311,12 @@ class SQLShareTests(unittest.TestCase, SQLShareSite):
 
     def setUp(self):
         self.driver = getattr(webdriver, self.browser)()
+        if self.browser == "PhantomJS":
+            self.driver.set_window_size(1120, 550)
+        
         self.driver.get(self.url)
+
+
 
         self.actions = AC(self.driver)
 

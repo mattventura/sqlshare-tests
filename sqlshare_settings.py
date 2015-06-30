@@ -61,7 +61,7 @@ to_run = [
 
 # Various test settings
 settings = {
-    'browser'    : 'Chrome', # Could be Chrome, Firefox, PhantomJS, etc...
+    'browser'    : 'PhantomJS', # Could be Chrome, Firefox, PhantomJS, etc...
     'url'        : 'https://sqlshare-test.s.uw.edu',
     'date_format': "%a, %d %b %Y %H:%M:%S %Z",
     'login_type' : 'uw',
