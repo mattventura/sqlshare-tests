@@ -155,7 +155,7 @@ runner.run(suite)
 
 for dataset in to_upload:
     dataset_name = dataset['dataset_name']
-    if dataset_name is not self.to_delete_dataset:
+    if dataset_name is not sql.to_delete_dataset:
         sql.open_dataset(dataset_name)
         sql.delete_dataset()
 

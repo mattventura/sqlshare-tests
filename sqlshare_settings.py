@@ -33,12 +33,12 @@ to_upload = [
         'dataset_public' : False,
     },
 
-    # {
-    #     'filename' : csv_file_path,
-    #     'dataset_name' : "Test Dataset",
-    #     'dataset_desc' : "Dataset uploaded for automation tests.",
-    #     'dataset_public' : True,
-    # },
+    {
+        'filename' : csv_file_path,
+        'dataset_name' : "Test Dataset",
+        'dataset_desc' : "Dataset uploaded for automation tests.",
+        'dataset_public' : True,
+    },
 ]
 
 # Specify which tests to run
