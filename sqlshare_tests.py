@@ -62,6 +62,12 @@ class SQLShare(SQLShareTests):
         os.remove("query_results.csv")
 
     # Dataset Tests
+    def dataset_details(self):
+        self.open_dataset(self.existing_dataset)
+        details = self.get_dataset_details()
+        assert details['title'].lower() == self.existing_dataset.lower()
+        assert details['owner'] == self.username
+        
     def dataset_toggle_privacy(self):
         self.open_dataset(self.existing_dataset)
         self.private_public_toggle()
@@ -133,30 +139,30 @@ for setting_set in [test_config, settings]:
         setattr(SQLShare, setting, setting_set[setting])
 
 # Upload test datasets
-sql = SQLShare()
-sql.setUp()
-
-for dataset in to_upload:
-    for attr in ['filename', 'dataset_name', 'dataset_desc', 'dataset_public']:
-        setattr(sql, attr, dataset[attr])
-
-    sql.upload_dataset()
+if not settings['debug']:
+    sql = SQLShare()
+    sql.setUp()
     
-# Create and run suite
-suite = unittest.TestSuite()
+    for dataset in to_upload:
+        for attr in ['filename', 'dataset_name', 'dataset_desc', 'dataset_public']:
+            setattr(sql, attr, dataset[attr])
 
-for test in to_run:
-    suite.addTest(SQLShare(test))
+        sql.upload_dataset()
+    
+    # Create and run suite
+    suite = unittest.TestSuite()
 
-result = unittest.TestResult(verbosity=2)
-runner = unittest.TextTestRunner(stream=sys.stdout)
-runner.run(suite)
-#suite.run(result)
+    for test in to_run:
+        suite.addTest(SQLShare(test))
 
-for dataset in to_upload:
-    dataset_name = dataset['dataset_name']
-    if dataset_name is not sql.to_delete_dataset:
-        sql.open_dataset(dataset_name)
-        sql.delete_dataset()
+    result = unittest.TestResult(verbosity=2)
+    runner = unittest.TextTestRunner(stream=sys.stdout)
+    runner.run(suite)
+
+    for dataset in to_upload:
+        dataset_name = dataset['dataset_name']
+        if dataset_name is not sql.to_delete_dataset:
+            sql.open_dataset(dataset_name)
+            sql.delete_dataset()
 
 

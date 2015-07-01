@@ -1,6 +1,7 @@
 # Automation Tests for SQLShare
 # - Matt Stone
 import os
+import re
 import unittest
 import getpass
 import time
@@ -270,9 +271,31 @@ class PageActions:
         
 class DatasetActions:
 
+    def get_dataset_details(self):
+        title = self.get_element("h2.sql-detail-title").text.strip()
+        owner = self.get_element("span.sql-dataset-owner").text.strip()
+        desc  = self.get_element("textarea#dataset_description").text.strip()
+
+        _query = self.get_element("div.CodeMirror-code").text.strip()
+        _query = re.sub('\\n[0-9]+\\n', '\\n', _query[2:])
+        query  = re.sub('\\n[0-9]+$', '\\n', _query)   
+        
+        _date = self.get_element("span.sql-dataset-modified").text.strip()
+        date  = datetime.strptime(_date, self.date_format)
+
+        privacy = None
+        private = self.get_element("button#make_dataset_private")
+        public  = self.get_element("button#make_dataset_public")
+        for button in [private, public]:
+            if not "none" in button.get_attribute('style'):
+                privacy = self.get_element("span", source=button).text.strip()
+
+
+        return {'title':title, 'owner':owner, 'date':date, 'privacy':privacy, 'query':query, 'desc':desc}
+
     def private_public_toggle(self):
         actions = self.get_action_buttons()
-        for status in ['PRIVATE', 'PUBLIC']:
+        for status in ['PUBLIC', 'PRIVATE']:            
             if status in actions.keys():
                 actions[status].click()
                 return

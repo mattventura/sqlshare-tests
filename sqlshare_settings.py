@@ -26,19 +26,19 @@ test_config = {
 
 # Specify datasets that should be uploaded before running tests
 to_upload = [
-    {
-        'filename' : csv_file_path,
-        'dataset_name' : "Dataset to Delete",
-        'dataset_desc' : "This dataset should be deleted by automation tests",
-        'dataset_public' : False,
-    },
+    # {
+    #     'filename' : csv_file_path,
+    #     'dataset_name' : "Dataset to Delete",
+    #     'dataset_desc' : "This dataset should be deleted by automation tests",
+    #     'dataset_public' : False,
+    # },
 
-    {
-        'filename' : csv_file_path,
-        'dataset_name' : "Test Dataset",
-        'dataset_desc' : "Dataset uploaded for automation tests.",
-        'dataset_public' : True,
-    },
+    # {
+    #     'filename' : csv_file_path,
+    #     'dataset_name' : "Test Dataset",
+    #     'dataset_desc' : "Dataset uploaded for automation tests.",
+    #     'dataset_public' : True,
+    # },
 ]
 
 # Specify which tests to run
@@ -54,12 +54,15 @@ to_run = [
     'save_new_query',
     'download_new_query',
     # Dataset Tests
+    'dataset_details',
     'dataset_toggle_privacy',
     'dataset_share',
     'dataset_delete',
     'dataset_download',
     'dataset_snapshot',
 ]
+
+to_run = ['dataset_details']
 
 # Various test settings
 settings = {
@@ -70,8 +73,9 @@ settings = {
     #'username' :
     #'password' :
     'browser_options' : { "download.default_directory" : os.getcwd() },
-    'headless' : False,
+    'headless' : True,
     'driver_timeout' : 3,
+    'debug' : False
 }
 
 
