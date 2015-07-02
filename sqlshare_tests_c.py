@@ -1,6 +1,7 @@
 # Automation Tests for SQLShare
 # - Matt Stone
 import os
+import re
 import unittest
 import getpass
 import time
@@ -22,21 +23,6 @@ from selenium.webdriver.common.keys import Keys
 from sqlshare_settings import settings
 
 
-# Get Username and password from env if no settings file and from user if no env vars
-username = None
-password = None
-if not ('username' in settings.keys()):
-    try:
-        settings['username'] = os.environ['SQLSHARE_USERNAME']
-    except KeyError:
-        settings['username'] = input("Username: ")
-
-if not ('password' in settings.keys()):
-    try:
-        settings['password'] = os.environ['SQLSHARE_PASSWORD']
-    except KeyError:    
-        settings['password'] = getpass.getpass()
-
         
 class DriverMethods:
 
@@ -44,10 +30,10 @@ class DriverMethods:
         if source is None:
             source = self.driver
             
-        element = WebDriverWait(source, 10).until(EC.presence_of_element_located((by_method, selector)))
+        element = WebDriverWait(source, self.driver_timeout).until(EC.presence_of_element_located((by_method, selector)))
         
         if not ignore_visibility:
-            WebDriverWait(source, 10).until(EC.visibility_of(element))
+            WebDriverWait(source, self.driver_timeout).until(EC.visibility_of(element))
             
         return element
     
@@ -56,12 +42,12 @@ class DriverMethods:
         if source is None:
             source = self.driver
             
-        elements = WebDriverWait(source, 10).until(EC.presence_of_all_elements_located((by_method, selector)))
+        elements = WebDriverWait(source, self.driver_timeout).until(EC.presence_of_all_elements_located((by_method, selector)))
         
         if not ignore_visibility:
             for element in elements:
                 try:
-                    WebDriverWait(source, 2).until(EC.visibility_of(element))
+                    WebDriverWait(source, self.driver_timeout).until(EC.visibility_of(element))
                 except TimeoutException:
                     elements.remove(element)
 
@@ -99,7 +85,11 @@ class PageNavigation:
         raise Exception('Link "' + link_text + '" not found in sidebar')
 
     def scroll_to_bottom_of_datasets_page(self):
-        current = len(self.get_elements("a.sql-dataset-list-item"))
+        try:
+            current = len(self.get_elements("a.sql-dataset-list-item"))
+        except TimeoutException:
+            return
+        
         prior = -1
         while (prior != current):
             time.sleep(2)
@@ -114,7 +104,8 @@ class PageNavigation:
         datasets = self.get_datasets()
         for dataset in datasets:
             if dataset['name'].lower() == dataset_name.lower():
-                dataset['element'].click()
+                url = dataset['element'].get_attribute('href')
+                self.driver.get(url)
                 return
 
         raise Exception("Dataset with name \"" + dataset_name + "\" could not be found")
@@ -131,19 +122,25 @@ class GetMethods:
         }
 
         self.scroll_to_bottom_of_datasets_page()
-        
-        dataset_elements = self.get_elements("a.sql-dataset-list-item")
-        
+
+        try:
+            dataset_elements = self.get_elements("a.sql-dataset-list-item")
+        except TimeoutException:
+            return {}
+            
         datasets = []
         for element in dataset_elements:
             dataset = {}
             for detail in selectors.keys():
-                dataset[detail] = self.get_element(selectors[detail], source=element).text.strip()
-                print(dataset[detail])
+                try:
+                    dataset[detail] = self.get_element(selectors[detail], source=element).text.strip()
+                except TimeoutException:
+                    dataset[detail] = None
 
             # Convert date to datetime object
-            date_string = dataset['date'][10:]
-            dataset['date'] = datetime.strptime(date_string, self.date_format)
+            if dataset['date'] is not None:
+                date_string = dataset['date'][10:]
+                dataset['date'] = datetime.strptime(date_string, self.date_format)
 
             dataset['element'] = element
                 
@@ -166,17 +163,25 @@ class GetMethods:
             'date'  : "span.sql-query-date",
             'status': "span.sql-query-status",
         }
-        
-        query_elements = self.get_elements("div.sql-query-list a.sql-query-list-item")
+
+        try:
+            query_elements = self.get_elements("div.sql-query-list a.sql-query-list-item")
+        except TimeoutException:
+            return {}
 
         queries = []
         for element in query_elements:
             query = {}
             for detail in selectors.keys():
-                query[detail] = self.get_element(selector, source=element).text.strip()
+                try:
+                    query[detail] = self.get_element(selectors[detail], source=element).text.strip()
+                except TimeoutException:
+                    query[detial] = None
 
-            date_string = query['date']
-            query['date'] = datetime.strptime(date_string, self.date_format)
+            # Convert date to datetime
+            if query['date'] is not None:
+                date_string = query['date']
+                query['date'] = datetime.strptime(date_string, self.date_format)
 
             queries.append(query)
             
@@ -184,11 +189,14 @@ class GetMethods:
     
 
     def get_action_buttons(self):
-        button_elements = self.get_elements("div.sql-dataset-actions button")
+        button_elements = self.get_elements("btn", by_method=By.CLASS_NAME)
         actions = {}
         for button in button_elements:
-            action = self.get_element("i span", source=button).text.strip()
-            actions[action] = button
+            try:
+                action = self.get_element("span", source=button).text.strip()
+                actions[action] = button
+            except TimeoutException:
+                pass
 
         return actions       
 
@@ -206,7 +214,7 @@ class PageActions:
             raise Exception("New query action must be specified")
 
         if self.new_query_action == 'save':
-            self.get_action_buttons()['SAVE DATASET']
+            self.get_action_buttons()['SAVE DATASET'].click()
             self.save_dataset()
             
         elif self.new_query_action == 'download':
@@ -234,12 +242,26 @@ class PageActions:
 
         self.get_element("button#save_button").click()
 
+        time.sleep(10)
+        self.click_sidebar_link("Yours")
+        datasets = self.get_datasets()
+
+        names = []
+        for dataset in datasets:
+            names.append(dataset['name'].lower())
+
+        assert self.dataset_name.lower() in names
+
 
     def save_dataset(self):
         form = self.get_element("form")
 
-        self.get_element("input#blah1",    source=form).send_keys(self.dataset_name)
+        title_element = self.get_element("input#blah1", source=form)
+        title_element.clear()
+        title_element.send_keys(self.dataset_name)
+
         self.get_element("textarea#blah2", source=form).send_keys(self.dataset_desc)
+        
         checkbox = self.get_element("div.checkbox input", source=form)
         if (self.dataset_public and not checkbox.is_selected()) or (not self.dataset_public and checkbox.is_selected()):
             checkbox.click()
@@ -249,9 +271,31 @@ class PageActions:
         
 class DatasetActions:
 
+    def get_dataset_details(self):
+        title = self.get_element("h2.sql-detail-title").text.strip()
+        owner = self.get_element("span.sql-dataset-owner").text.strip()
+        desc  = self.get_element("textarea#dataset_description").text.strip()
+
+        _query = self.get_element("div.CodeMirror-code").text.strip()
+        _query = re.sub('\\n[0-9]+\\n', '\\n', _query[2:])
+        query  = re.sub('\\n[0-9]+$', '\\n', _query)   
+        
+        _date = self.get_element("span.sql-dataset-modified").text.strip()
+        date  = datetime.strptime(_date, self.date_format)
+
+        privacy = None
+        private = self.get_element("button#make_dataset_private")
+        public  = self.get_element("button#make_dataset_public")
+        for button in [private, public]:
+            if not "none" in button.get_attribute('style'):
+                privacy = self.get_element("span", source=button).text.strip()
+
+
+        return {'title':title, 'owner':owner, 'date':date, 'privacy':privacy, 'query':query, 'desc':desc}
+
     def private_public_toggle(self):
         actions = self.get_action_buttons()
-        for status in ['PRIVATE', 'PUBLIC']:
+        for status in ['PUBLIC', 'PRIVATE']:            
             if status in actions.keys():
                 actions[status].click()
                 return
@@ -259,6 +303,7 @@ class DatasetActions:
             
     def share_dataset(self):
         self.get_action_buttons()['SHARE'].click()
+        time.sleep(3)
 
         for email in self.emails:
             self.get_element("input#exampleInputEmail1").send_keys(email + Keys.ENTER)
@@ -268,14 +313,18 @@ class DatasetActions:
         
     def delete_dataset(self):
         self.get_action_buttons()['DELETE'].click()
+        time.sleep(3)
         self.get_element("button#delete_dataset").click()
 
     def run_query(self):
         self.get_element("button#run_query").click()
 
-    def dataset_snapshot(self):
+    def snapshot_dataset(self):
         self.get_action_buttons()['SNAPSHOT'].click()
         self.save_dataset()
+
+    def download_dataset(self):
+        self.get_action_buttons()['DOWNLOAD'].click()
 
 
 
@@ -287,13 +336,32 @@ class SQLShareSite(DriverMethods, PageNavigation, PageActions, GetMethods, Datas
 class SQLShareTests(unittest.TestCase, SQLShareSite):
 
     def setUp(self):
-        self.driver = getattr(webdriver, self.browser)()
+        if self.headless:
+            import pyvirtualdisplay
+            self.display = pyvirtualdisplay.Display()
+            self.display.start()
+
+        if self.browser == "PhantomJS":
+            self.driver = webdriver.PhantomJS()
+            self.driver.set_window_size(1120, 550)
+
+        elif self.browser == "Chrome" and self.browser_options:
+            options = webdriver.ChromeOptions()
+            options.add_experimental_option("prefs", self.browser_options)
+            self.driver = webdriver.Chrome(chrome_options=options)
+
+        else:
+            self.driver = getattr(webdriver, self.browser)()
+
+            
         self.driver.get(self.url)
-
         self.actions = AC(self.driver)
-
         self.sqlshare_login()
 
         
     def tearDown(self):
         self.driver.quit()
+
+        if self.headless:
+            self.display.stop()
+
