@@ -59,6 +59,18 @@ class SQLShare(SQLShareTests):
         assert os.path.isfile("query_results.csv")
         os.remove("query_results.csv")
 
+    def keyword_search(self):
+        self.search_keyword(self.existing_dataset)
+        datasets = self.get_datasets()
+
+        for dataset in datasets:
+            if dataset['name'].lower() == self.existing_dataset.lower():
+                return
+
+        raise AssertionError("Dataset not found in dataset list")
+
+                         
+
     # Dataset Tests
     def dataset_details(self):
         self.open_dataset(self.existing_dataset)

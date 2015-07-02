@@ -4,7 +4,7 @@
 import os
 
 # Specify which data is to be used by sql tests
-csv_file_path = "/home/matt/Work/sqlshare_tests/csv/d3.csv"
+csv_file_path = "/home/matt/sqlshare/csv/d3.csv"
 
 test_config = {
     # Datasets
@@ -26,19 +26,19 @@ test_config = {
 
 # Specify datasets that should be uploaded before running tests
 to_upload = [
-    # {
-    #     'filename' : csv_file_path,
-    #     'dataset_name' : "Dataset to Delete",
-    #     'dataset_desc' : "This dataset should be deleted by automation tests",
-    #     'dataset_public' : False,
-    # },
+    {
+        'filename' : csv_file_path,
+        'dataset_name' : "Dataset to Delete",
+        'dataset_desc' : "This dataset should be deleted by automation tests",
+        'dataset_public' : False,
+    },
 
-    # {
-    #     'filename' : csv_file_path,
-    #     'dataset_name' : "Test Dataset",
-    #     'dataset_desc' : "Dataset uploaded for automation tests.",
-    #     'dataset_public' : True,
-    # },
+    {
+        'filename' : csv_file_path,
+        'dataset_name' : "Test Dataset",
+        'dataset_desc' : "Dataset uploaded for automation tests.",
+        'dataset_public' : True,
+    },
 ]
 
 # Specify which tests to run
@@ -53,6 +53,7 @@ to_run = [
     'dataset_upload',
     'save_new_query',
     'download_new_query',
+    'keyword_search',
     # Dataset Tests
     'dataset_details',
     'dataset_toggle_privacy',
@@ -61,8 +62,6 @@ to_run = [
     'dataset_download',
     'dataset_snapshot',
 ]
-
-to_run = ['dataset_details']
 
 # Various test settings
 settings = {
@@ -73,8 +72,8 @@ settings = {
     #'username' :
     #'password' :
     'browser_options' : { "download.default_directory" : os.getcwd() },
-    'headless' : True,
-    'driver_timeout' : 3,
+    'headless' : False,
+    'driver_timeout' : 1,
     'debug' : False
 }
 

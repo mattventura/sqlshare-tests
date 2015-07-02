@@ -268,6 +268,11 @@ class PageActions:
 
         self.get_element("button", source=form).click()
 
+    def search_keyword(self, keyword):
+        search = self.get_element("input#dataset_search_input")
+        search.clear()
+        search.send_keys(keyword + Keys.ENTER)        
+
         
 class DatasetActions:
 
