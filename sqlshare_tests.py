@@ -4,6 +4,8 @@
 from sqlshare_tests_c import *
 from sqlshare_settings import *
 
+from concurrencytest import ConcurrentTestSuite, fork_for_tests
+
 import sys
 
 class SQLShare(SQLShareTests):
@@ -222,9 +224,14 @@ if not settings['debug']:
     for test in to_run:
         suite.addTest(SQLShare(test))
 
-    result = unittest.TestResult(verbosity=2)
     runner = unittest.TextTestRunner(stream=sys.stdout)
-    runner.run(suite)
+
+    # Sequential
+    # runner.run(suite)
+
+    # Concurrent
+    concurrent_suite = ConcurrentTestSuite(suite, fork_for_tests(settings['concurrent_tests']))
+    runner.run(concurrent_suite)
 
     for dataset in to_upload:
         dataset_name = dataset['dataset_name']

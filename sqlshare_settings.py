@@ -1,8 +1,6 @@
 # Settings for sqlshare tests located here
 # Most config can be handled here
 
-import os
-
 # Specify which data is to be used by sql tests
 csv_file_path = "/home/matt/sqlshare/csv/d3.csv"
 
@@ -70,16 +68,17 @@ to_run = [
 
 # Various test settings
 settings = {
-    'browser'    : 'Chrome', # Could be Chrome, Firefox, PhantomJS, etc...
+    'browser'    : 'Firefox', # Could be Chrome, Firefox, PhantomJS, etc...
     'url'        : 'https://sqlshare-test.s.uw.edu',
     'date_format': "%a, %d %b %Y %H:%M:%S %Z",
     'login_type' : 'uw',
     #'username' :
     #'password' :
-    'browser_options' : { "download.default_directory" : os.getcwd() },
     'headless' : True,
     'driver_timeout' : 1,
-    'debug' : False
+    'debug' : False,
+    'concurrent_tests' : 5,
+    
 }
 
 # For debug purposes

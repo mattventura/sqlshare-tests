@@ -235,8 +235,10 @@ class PageActions:
         self.click_sidebar_link("Upload Dataset")
 
         a_element = self.get_element("a#upload_dataset_browse")
-        self.get_element("*", source=a_element).send_keys(self.filename)
-
+        u_element = self.get_element("*", source=a_element)
+        self.driver.execute_script("arguments[0].style = 'display: visible;';", u_element)
+        u_element.send_keys(self.filename)  
+        
         title_element = self.get_element("input#id_dataset_name")
         title_element.clear()
         title_element.send_keys(self.dataset_name)
@@ -357,7 +359,7 @@ class SQLShareSite(DriverMethods, PageNavigation, PageActions, GetMethods, Datas
 class SQLShareTests(unittest.TestCase, SQLShareSite):
 
     def setUp(self):
-        if self.headless:
+        if self.headless and self.browser != "PhantomJS":
             import pyvirtualdisplay
             self.display = pyvirtualdisplay.Display()
             self.display.start()
@@ -366,10 +368,20 @@ class SQLShareTests(unittest.TestCase, SQLShareSite):
             self.driver = webdriver.PhantomJS()
             self.driver.set_window_size(1120, 550)
 
-        elif self.browser == "Chrome" and self.browser_options:
+        elif self.browser == "Chrome":
             options = webdriver.ChromeOptions()
-            options.add_experimental_option("prefs", self.browser_options)
+            options.add_experimental_option("prefs", { "download.default_directory" : os.getcwd() })
             self.driver = webdriver.Chrome(chrome_options=options)
+
+        elif self.browser == "Firefox":
+            profile = webdriver.FirefoxProfile()
+            profile.set_preference("browser.download.folderList", 2)
+            profile.set_preference("browser.download.manager.showWhenStarting", False)
+            profile.set_preference("browser.download.dir", os.getcwd())
+            profile.set_preference("browser.helperApps.neverAsk.saveToDis", 'text/csv')
+
+            self.driver = webdriver.Firefox(firefox_profile=profile)
+            
 
         else:
             self.driver = getattr(webdriver, self.browser)()
