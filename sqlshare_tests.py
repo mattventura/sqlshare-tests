@@ -227,11 +227,11 @@ if not settings['debug']:
     runner = unittest.TextTestRunner(stream=sys.stdout)
 
     # Sequential
-    # runner.run(suite)
+    runner.run(suite)
 
     # Concurrent
-    concurrent_suite = ConcurrentTestSuite(suite, fork_for_tests(settings['concurrent_tests']))
-    runner.run(concurrent_suite)
+    # concurrent_suite = ConcurrentTestSuite(suite, fork_for_tests(settings['concurrent_tests']))
+    # runner.run(concurrent_suite)
 
     for dataset in to_upload:
         dataset_name = dataset['dataset_name']

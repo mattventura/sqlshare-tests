@@ -1,7 +1,9 @@
 selenium
-concurrencytest
 
 # for headless support
 pyvirtualdisplay
+
+# for concurrency testing
+concurrencytest
 
 
