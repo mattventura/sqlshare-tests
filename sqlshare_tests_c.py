@@ -198,7 +198,14 @@ class GetMethods:
             except TimeoutException:
                 pass
 
-        return actions       
+        return actions
+
+    def get_page_query(self):
+        query = self.get_element("div.CodeMirror-code").text.strip()
+        query = re.sub('\\n[0-9]+\\n', '\\n', query[2:])
+        query  = re.sub('\\n[0-9]+$', '\\n', query)
+        return query
+
 
 
 class PageActions:
@@ -281,9 +288,7 @@ class DatasetActions:
         owner = self.get_element("span.sql-dataset-owner").text.strip()
         desc  = self.get_element("textarea#dataset_description").text.strip()
 
-        _query = self.get_element("div.CodeMirror-code").text.strip()
-        _query = re.sub('\\n[0-9]+\\n', '\\n', _query[2:])
-        query  = re.sub('\\n[0-9]+$', '\\n', _query)   
+        query = self.get_page_query()
         
         _date = self.get_element("span.sql-dataset-modified").text.strip()
         date  = datetime.strptime(_date, self.date_format)
@@ -321,8 +326,19 @@ class DatasetActions:
         time.sleep(3)
         self.get_element("button#delete_dataset").click()
 
+    def edit_query(self, query):
+        self.get_element("div.CodeMirror").click()
+        
+        for i in range(2 * len(query)):
+            self.actions.send_keys(Keys.BACKSPACE)
+            
+        self.actions.send_keys(query).perform()
+
     def run_query(self):
         self.get_element("button#run_query").click()
+
+    def update_query(self):
+        self.get_element("button#update_dataset_sql").click()
 
     def snapshot_dataset(self):
         self.get_action_buttons()['SNAPSHOT'].click()

@@ -19,6 +19,7 @@ test_config = {
 
     # Query
     'working_query' : "SELECT * FROM [mstone12].[TEST DATASET]",
+    'alt_query'     : "SELECT a FROM [mstone12].[TEST DATASET]",
 
     # Emails (for share test)
     'emails' : ['mstone12@u.washington.edu'],
@@ -61,6 +62,10 @@ to_run = [
     'dataset_delete',
     'dataset_download',
     'dataset_snapshot',
+    'dataset_new_dataset',
+    'dataset_derive',
+    'dataset_run',
+    'dataset_update',
 ]
 
 # Various test settings
@@ -72,9 +77,15 @@ settings = {
     #'username' :
     #'password' :
     'browser_options' : { "download.default_directory" : os.getcwd() },
-    'headless' : False,
+    'headless' : True,
     'driver_timeout' : 1,
     'debug' : False
 }
+
+# For debug purposes
+#to_run = ['dataset_run', 'dataset_update']
+#to_upload = [to_upload[1]]
+
+
 
 
