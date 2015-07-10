@@ -3,8 +3,9 @@
 
 import os
 
-# Specify which data is to be used by sql tests
 csv_file_path = "/home/matt/Work/sqlshare_tests/csv/d3.csv"
+
+# Specify which data is to be used by sql tests
 
 test_config = {
     # Datasets
@@ -19,6 +20,7 @@ test_config = {
 
     # Query
     'working_query' : "SELECT * FROM [mstone12].[TEST DATASET]",
+    'alt_query'     : "SELECT a FROM [mstone12].[TEST DATASET]",
 
     # Emails (for share test)
     'emails' : ['mstone12@u.washington.edu'],
@@ -61,20 +63,27 @@ to_run = [
     'dataset_delete',
     'dataset_download',
     'dataset_snapshot',
+    'dataset_new_dataset',
+    'dataset_derive',
+    'dataset_run',
+    'dataset_update',
 ]
 
 # Various test settings
 settings = {
-    'browser'    : 'Chrome', # Could be Chrome, Firefox, PhantomJS, etc...
+    'browser'    : 'Firefox', # Could be Chrome, Firefox, PhantomJS, etc...
     'url'        : 'https://sqlshare-test.s.uw.edu',
     'date_format': "%a, %d %b %Y %H:%M:%S %Z",
     'login_type' : 'uw',
     #'username' :
     #'password' :
-    'browser_options' : { "download.default_directory" : os.getcwd() },
     'headless' : True,
     'driver_timeout' : 1,
-    'debug' : False
+    'debug' : False,
+    #'concurrent_tests' : 5,
+    
 }
 
-
+# For debug purposes
+#to_run = ['dataset_run', 'dataset_update']
+#to_upload = [to_upload[1]]

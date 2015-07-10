@@ -200,6 +200,12 @@ class GetMethods:
 
         return actions       
 
+    def get_page_query(self):
+        query = self.get_element("div.CodeMirror-code").text.strip()
+        query = re.sub('\\n[0-9]+\\n', '\\n', query[2:])
+        query  = re.sub('\\n[0-9]+$', '\\n', query)
+        return query
+
 
 class PageActions:
     
@@ -228,8 +234,10 @@ class PageActions:
         self.click_sidebar_link("Upload Dataset")
 
         a_element = self.get_element("a#upload_dataset_browse")
-        self.get_element("*", source=a_element).send_keys(self.filename)
-
+        u_element = self.get_element("*", source=a_element)
+        self.driver.execute_script("arguments[0].style = 'display: visible;';", u_element)
+        u_element.send_keys(self.filename)  
+        
         title_element = self.get_element("input#id_dataset_name")
         title_element.clear()
         title_element.send_keys(self.dataset_name)
@@ -281,9 +289,7 @@ class DatasetActions:
         owner = self.get_element("span.sql-dataset-owner").text.strip()
         desc  = self.get_element("textarea#dataset_description").text.strip()
 
-        _query = self.get_element("div.CodeMirror-code").text.strip()
-        _query = re.sub('\\n[0-9]+\\n', '\\n', _query[2:])
-        query  = re.sub('\\n[0-9]+$', '\\n', _query)   
+        query = self.get_page_query()
         
         _date = self.get_element("span.sql-dataset-modified").text.strip()
         date  = datetime.strptime(_date, self.date_format)
@@ -324,6 +330,20 @@ class DatasetActions:
     def run_query(self):
         self.get_element("button#run_query").click()
 
+    def edit_query(self, query):
+        self.get_element("div.CodeMirror").click()
+        
+        for i in range(2 * len(query)):
+            self.actions.send_keys(Keys.BACKSPACE)
+            
+        self.actions.send_keys(query).perform()
+
+    def run_query(self):
+        self.get_element("button#run_query").click()
+
+    def update_query(self):
+        self.get_element("button#update_dataset_sql").click()
+
     def snapshot_dataset(self):
         self.get_action_buttons()['SNAPSHOT'].click()
         self.save_dataset()
@@ -341,7 +361,8 @@ class SQLShareSite(DriverMethods, PageNavigation, PageActions, GetMethods, Datas
 class SQLShareTests(unittest.TestCase, SQLShareSite):
 
     def setUp(self):
-        if self.headless:
+
+        if self.headless and self.browser != "PhantomJS":
             import pyvirtualdisplay
             self.display = pyvirtualdisplay.Display()
             self.display.start()
@@ -350,11 +371,20 @@ class SQLShareTests(unittest.TestCase, SQLShareSite):
             self.driver = webdriver.PhantomJS()
             self.driver.set_window_size(1120, 550)
 
-        elif self.browser == "Chrome" and self.browser_options:
+        elif self.browser == "Chrome":
             options = webdriver.ChromeOptions()
-            options.add_experimental_option("prefs", self.browser_options)
+            options.add_experimental_option("prefs", { "download.default_directory" : os.getcwd() })
             self.driver = webdriver.Chrome(chrome_options=options)
 
+        elif self.browser == "Firefox":
+            profile = webdriver.FirefoxProfile()
+            profile.set_preference("browser.download.folderList", 2)
+            profile.set_preference("browser.download.manager.showWhenStarting", False)
+            profile.set_preference("browser.download.dir", os.getcwd())
+            profile.set_preference("browser.helperApps.neverAsk.saveToDis", 'text/csv')
+
+            self.driver = webdriver.Firefox(firefox_profile=profile)
+            
         else:
             self.driver = getattr(webdriver, self.browser)()
 
@@ -367,6 +397,6 @@ class SQLShareTests(unittest.TestCase, SQLShareSite):
     def tearDown(self):
         self.driver.quit()
 
-        if self.headless:
+        if self.headless and self.browser != "PhantomJS":
             self.display.stop()
 

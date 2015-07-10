@@ -107,6 +107,64 @@ class SQLShare(SQLShareTests):
 
         self.delete_and_assert("Snapshot Dataset")
 
+
+    def dataset_new_dataset(self):
+        self.open_dataset(self.existing_dataset)
+        q1 = self.get_dataset_details()['query']
+
+        self.get_action_buttons()['NEW DATASET FROM QUERY'].click()
+        assert self.driver.current_url == self.url + "/new/"
+        q2 = self.get_page_query()
+
+        assert q1 == q2
+
+    def dataset_derive(self):
+        self.open_dataset(self.existing_dataset)
+        q1 = self.get_dataset_details()['query']
+
+        self.get_action_buttons()['DERIVE'].click()
+        assert self.driver.current_url == self.url + "/new/"
+        q2 = self.get_page_query()
+
+        q1 = re.sub('table_', '', q1)
+        assert q1 == q2
+
+    def dataset_run(self):
+        self.open_dataset(self.existing_dataset)
+        
+        if hasattr(self, 'alt_query') and self.alt_query is not None:
+            query = self.alt_query
+        else:
+            query = self.get_page_query()
+
+        self.edit_query(query)
+        self.run_query()
+
+        assert not self.get_element("div#query_results_panel").text.strip().startswith("Error running query")
+
+    def dataset_update(self):
+        self.open_dataset(self.existing_dataset)
+        old_query = self.get_page_query()
+
+        if hasattr(self, 'alt_query') and self.alt_query is not None:
+            query = self.alt_query
+        else:
+            raise Exception("alt_query must be defined to run this test")
+
+        self.edit_query(query)
+        self.run_query()
+        self.update_query()
+
+        self.open_dataset(self.existing_dataset)
+        assert query == self.get_page_query(), ("\nS: " + query + "\nP: " + self.get_page_query())
+
+        self.edit_query(old_query)
+        self.run_query()
+        self.update_query()
+
+        self.open_dataset(self.existing_dataset)
+        assert old_query == self.get_page_query(), ("\nS: " + old_query + "\nP: " + self.get_page_query())
+
     # To do new_dataset, derive, run, update
     def delete_and_assert(self, dataset_name):
         self.open_dataset(dataset_name)
@@ -176,4 +234,6 @@ if not settings['debug']:
         if dataset_name is not sql.to_delete_dataset:
             sql.open_dataset(dataset_name)
             sql.delete_dataset()
-    
+
+    sql.tearDown()
+    del sql    
