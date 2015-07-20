@@ -1,12 +1,9 @@
 # Settings for sqlshare tests located here
 # Most config can be handled here
 
-import os
-
 csv_file_path = "/home/matt/sqlshare-tests/csv/d3.csv"
 
 # Specify which data is to be used by sql tests
-
 test_config = {
     # Datasets
     'existing_dataset' : "Test Dataset",
@@ -51,11 +48,13 @@ to_run = [
     'view_shared_datasets',
     'view_recent_datasets',
     'view_recent_queries',
+    
     # Functional Tests
     'dataset_upload',
     'save_new_query',
     'download_new_query',
     'keyword_search',
+    
     # Dataset Tests
     'dataset_details',
     'dataset_toggle_privacy',
@@ -71,17 +70,21 @@ to_run = [
 
 # Various test settings
 settings = {
-    'browser'    : 'Firefox', # Could be Chrome, Firefox, PhantomJS, etc...
     'url'        : 'https://sqlshare-test.s.uw.edu',
     'date_format': "%a, %d %b %Y %H:%M:%S %Z",
     'login_type' : 'uw',
-    #'username' :
-    #'password' :
-    'headless' : True,
-    'visible' : False, # if headless
+    #'username'  :
+    #'password'  :
+
+    'browser'  : 'Firefox', # Could be Chrome, Firefox, PhantomJS, etc...
+    'headless' : True,      # Should be true for concurrency
+    'visible'  : False,     # If headless, use Xephyr
+    
+    'concurrent_tests' : 5, # Set to false for non-concurrency
+    
     'driver_timeout' : 1,
+    
     'debug' : False,
-    'concurrent_tests' : 5, # set to false for non-concurrency
     
 }
 
