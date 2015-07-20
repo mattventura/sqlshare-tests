@@ -4,4 +4,4 @@ selenium
 pyvirtualdisplay
 
 # for concurrency testing
-# concurrencytest
+concurrencytest

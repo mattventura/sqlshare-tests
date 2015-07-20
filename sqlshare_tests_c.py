@@ -201,9 +201,10 @@ class GetMethods:
         return actions       
 
     def get_page_query(self):
+        time.sleep(2)
         query = self.get_element("div.CodeMirror-code").text.strip()
         query = re.sub('\\n[0-9]+\\n', '\\n', query[2:])
-        query  = re.sub('\\n[0-9]+$', '\\n', query)
+        query = re.sub('\\n[0-9]+$',   '\\n', query)
         return query
 
 
@@ -212,7 +213,7 @@ class PageActions:
     def new_query(self):
         self.click_sidebar_link("New Query")
 
-        self.get_element("div.CodeMirror").click()
+        self.get_element("div.CodeMirror-lines").click()
         self.actions.send_keys(self.query).perform()
         self.get_element("form button#run_query").click()
 
@@ -236,7 +237,8 @@ class PageActions:
         a_element = self.get_element("a#upload_dataset_browse")
         u_element = self.get_element("*", source=a_element)
         self.driver.execute_script("arguments[0].style = 'display: visible;';", u_element)
-        u_element.send_keys(self.filename)  
+        u_element.send_keys(self.filename)
+        time.sleep(10)
         
         title_element = self.get_element("input#id_dataset_name")
         title_element.clear()
@@ -262,19 +264,17 @@ class PageActions:
 
 
     def save_dataset(self):
-        form = self.get_element("form")
-
-        title_element = self.get_element("input#blah1", source=form)
+        title_element = self.get_element("input#blah1")
         title_element.clear()
         title_element.send_keys(self.dataset_name)
 
-        self.get_element("textarea#blah2", source=form).send_keys(self.dataset_desc)
+        self.get_element("textarea#blah2").send_keys(self.dataset_desc)
         
-        checkbox = self.get_element("div.checkbox input", source=form)
+        checkbox = self.get_element("form div.checkbox input")
         if (self.dataset_public and not checkbox.is_selected()) or (not self.dataset_public and checkbox.is_selected()):
             checkbox.click()
 
-        self.get_element("button", source=form).click()
+        self.get_element("form button").click()
 
     def search_keyword(self, keyword):
         search = self.get_element("input#dataset_search_input")
@@ -331,10 +331,11 @@ class DatasetActions:
         self.get_element("button#run_query").click()
 
     def edit_query(self, query):
-        self.get_element("div.CodeMirror").click()
+        self.get_element("div.CodeMirror-lines").click()
         
         for i in range(2 * len(query)):
             self.actions.send_keys(Keys.BACKSPACE)
+            self.actions.send_keys(Keys.DELETE)
             
         self.actions.send_keys(query).perform()
 
@@ -363,8 +364,15 @@ class SQLShareTests(unittest.TestCase, SQLShareSite):
     def setUp(self):
 
         if self.headless and self.browser != "PhantomJS":
+            disp_var = os.environ['DISPLAY']
+            
             import pyvirtualdisplay
-            self.display = pyvirtualdisplay.Display()
+
+            if self.visible:
+                self.display = pyvirtualdisplay.Display(visible=1)
+            else:
+                self.display = pyvirtualdisplay.Display()
+                
             self.display.start()
 
         if self.browser == "PhantomJS":
@@ -381,13 +389,16 @@ class SQLShareTests(unittest.TestCase, SQLShareSite):
             profile.set_preference("browser.download.folderList", 2)
             profile.set_preference("browser.download.manager.showWhenStarting", False)
             profile.set_preference("browser.download.dir", os.getcwd())
-            profile.set_preference("browser.helperApps.neverAsk.saveToDis", 'text/csv')
+            profile.set_preference("browser.helperApps.neverAsk.saveToDisk", 'text/csv')
 
             self.driver = webdriver.Firefox(firefox_profile=profile)
             
         else:
             self.driver = getattr(webdriver, self.browser)()
 
+
+        if self.headless and self.browser != "PhantomJS":
+            os.environ['DISPLAY'] = disp_var
             
         self.driver.get(self.url)
         self.actions = AC(self.driver)

@@ -227,7 +227,16 @@ if not settings['debug']:
 
     result = unittest.TestResult(verbosity=2)
     runner = unittest.TextTestRunner(stream=sys.stdout)
-    runner.run(suite)
+    #runner.run(suite)
+
+    # Concurrency
+    if settings['concurrent_tests']:
+        from concurrencytest import ConcurrentTestSuite, fork_for_tests
+        concurrent_suite = ConcurrentTestSuite(suite, fork_for_tests(settings['concurrent_tests']))
+        runner.run(concurrent_suite)
+    else:
+        runner.run(suite)
+        
 
     for dataset in to_upload:
         dataset_name = dataset['dataset_name']

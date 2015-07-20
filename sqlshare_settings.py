@@ -3,7 +3,7 @@
 
 import os
 
-csv_file_path = "/home/matt/Work/sqlshare_tests/csv/d3.csv"
+csv_file_path = "/home/matt/sqlshare-tests/csv/d3.csv"
 
 # Specify which data is to be used by sql tests
 
@@ -78,12 +78,13 @@ settings = {
     #'username' :
     #'password' :
     'headless' : True,
+    'visible' : False, # if headless
     'driver_timeout' : 1,
     'debug' : False,
-    #'concurrent_tests' : 5,
+    'concurrent_tests' : 5, # set to false for non-concurrency
     
 }
 
 # For debug purposes
-#to_run = ['dataset_run', 'dataset_update']
+#to_run = ['download_new_query', 'dataset_update']
 #to_upload = [to_upload[1]]
