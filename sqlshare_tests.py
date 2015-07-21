@@ -189,11 +189,16 @@ class SQLShare(SQLShareTests):
 # Get Username and password from env if no settings file and from user if no env vars
 username = None
 password = None
+version = sys.version_info[0]
+
 if not ('username' in settings.keys()):
     try:
         settings['username'] = os.environ['SQLSHARE_USERNAME']
     except KeyError:
-        settings['username'] = input("Username: ")
+        if version != 3:
+            settings['username'] = raw_input("Username: ")
+        else:
+            settings['username'] = input("Username: ")
 
 if not ('password' in settings.keys()):
     try:
@@ -205,7 +210,9 @@ if not ('password' in settings.keys()):
 # Set settings as attributes
 for setting_set in [test_config, settings]:
     for setting in setting_set:
-        setattr(SQLShare, setting, setting_set[setting])
+        setattr(SQLShareTests, setting, setting_set[setting])
+
+setattr(SQLShare, 'runTest', lambda: none)
 
 
 # Upload test datasets

@@ -76,9 +76,9 @@ settings = {
     #'username'  :
     #'password'  :
 
-    'browser'  : 'Firefox', # Could be Chrome, Firefox, PhantomJS, etc...
-    'headless' : True,      # Should be true for concurrency
-    'visible'  : False,     # If headless, use Xephyr
+    'browser'  : 'Firefox',   # Could be Chrome, Firefox, PhantomJS, etc...
+    'headless' : True,        # Should be true for concurrency
+    'visible'  : True,        # If headless, use Xephyr
     
     'concurrent_tests' : 5, # Set to false for non-concurrency
     
