@@ -1,13 +1,19 @@
 # Settings for sqlshare tests located here
 # Most config can be handled here
 
-csv_file_path = "/home/matt/sqlshare-tests/csv/d3.csv"
+import os
+
+# Prelim config (completes basic test_config and to_upload settings)
+csv_file_path = os.getcwd() + '/csv/d3.csv'
+existing_dataset_name = "Test Dataset"
+to_delete_dataset_name = "Dataset to Delete"
+username = "mstone12" # uw login
 
 # Specify which data is to be used by sql tests
 test_config = {
     # Datasets
-    'existing_dataset' : "Test Dataset",
-    'to_delete_dataset'   : "Dataset to Delete",
+    'existing_dataset'    : existing_dataset_name,
+    'to_delete_dataset'   : to_delete_dataset_name,
 
     # File upload
     'upload_filename'     : csv_file_path,
@@ -16,25 +22,25 @@ test_config = {
     'upload_dataset_public' : True,
 
     # Query
-    'working_query' : "SELECT * FROM [mstone12].[TEST DATASET]",
-    'alt_query'     : "SELECT a FROM [mstone12].[TEST DATASET]",
+    'working_query' : "SELECT * FROM [" + username + "].[" + existing_dataset_name.upper()  + "]",
+    'alt_query'     : "SELECT a FROM [" + username + "].[" + to_delete_dataset_name.upper() + "]",
 
     # Emails (for share test)
-    'emails' : ['mstone12@u.washington.edu'],
+    'emails' : [username + '@u.washington.edu'],
 }
 
 # Specify datasets that should be uploaded before running tests
 to_upload = [
     {
         'filename' : csv_file_path,
-        'dataset_name' : "Dataset to Delete",
+        'dataset_name' : test_config['to_delete_dataset'],
         'dataset_desc' : "This dataset should be deleted by automation tests",
         'dataset_public' : False,
     },
 
     {
         'filename' : csv_file_path,
-        'dataset_name' : "Test Dataset",
+        'dataset_name' : test_config['existing_dataset'],
         'dataset_desc' : "Dataset uploaded for automation tests.",
         'dataset_public' : True,
     },
@@ -80,7 +86,7 @@ settings = {
     'headless' : True,        # Should be true for concurrency
     'visible'  : True,        # If headless, use Xephyr
     
-    'concurrent_tests' : 5, # Set to false for non-concurrency
+    'concurrent_tests' : False, # Set to false for non-concurrency
     
     'driver_timeout' : 1,
     
