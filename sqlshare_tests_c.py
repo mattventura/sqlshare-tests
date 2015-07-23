@@ -364,8 +364,16 @@ class SQLShareTests(unittest.TestCase, SQLShareSite):
     def setUp(self):
 
         if self.headless and self.browser != "PhantomJS":
-            disp_var = os.environ['DISPLAY']
+            try:
+                disp_var = os.environ['DISPLAY']
+            except KeyError:
+                if self.concurrent_tests:
+                    raise Exception("Concurrent test cannot be run on systems where display environmental variable cannot be set")
+                else:
+                    pass
+                    
             
+                
             import pyvirtualdisplay
 
             if self.visible:
@@ -398,8 +406,12 @@ class SQLShareTests(unittest.TestCase, SQLShareSite):
 
 
         if self.headless and self.browser != "PhantomJS":
-            os.environ['DISPLAY'] = disp_var
-            
+            try:
+                os.environ['DISPLAY'] = disp_var
+            except KeyError:
+                print("No display env var")
+                pass
+                
         self.driver.get(self.url)
         self.actions = AC(self.driver)
         self.sqlshare_login()
