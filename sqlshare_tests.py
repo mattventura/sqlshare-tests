@@ -191,8 +191,8 @@ username = None
 password = None
 version = sys.version_info[0]
 
-if settings['headless'] == True and sys.platform in ('win32', 'Windows'):
-    raise Exception("Windows cannot run headless tests")
+if settings['headless'] == True and sys.platform in ('win32', 'Windows', 'mac', 'darwin'):
+    raise Exception("This os cannot run headless tests")
 
 if not ('username' in settings.keys()):
     try:
