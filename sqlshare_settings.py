@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # Settings for sqlshare tests located here
 # Most config can be handled here
 
@@ -83,7 +85,7 @@ settings = {
     #'password'  :
 
     'browser'  : 'Firefox',   # Could be Chrome, Firefox, PhantomJS, etc...
-    'headless' : True,        # Should be true for concurrency
+    'headless' : False,        # Should be true for concurrency
     'visible'  : True,        # If headless, use Xephyr
     
     'concurrent_tests' : False, # Set to false for non-concurrency

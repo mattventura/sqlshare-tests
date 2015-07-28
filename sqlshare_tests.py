@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # Tests for SQLShare
 # - Matt Stone
 
