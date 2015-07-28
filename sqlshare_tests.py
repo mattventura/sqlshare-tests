@@ -49,7 +49,7 @@ class SQLShare(SQLShareTests):
 
         self.new_query()
 
-        self.delete_and_assert("New Query Save Dataset")        
+        self.delete_and_assert("New Query Save Dataset")
 
     def download_new_query(self):
         self.query = self.working_query
@@ -71,7 +71,7 @@ class SQLShare(SQLShareTests):
 
         raise AssertionError("Dataset not found in dataset list")
 
-                         
+
 
     # Dataset Tests
     def dataset_details(self):
@@ -257,4 +257,4 @@ if not settings['debug']:
             sql.delete_dataset()
 
     sql.tearDown()
-    del sql    
+    del sql
