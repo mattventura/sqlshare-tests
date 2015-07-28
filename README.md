@@ -12,7 +12,7 @@
 
 `cd sqlshare-tests`
 
-`source bin/activate`
+`. bin/activate`
 
 - Install requirements (check requirements.txt for optional modules)
 
