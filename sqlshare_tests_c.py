@@ -23,7 +23,6 @@ from selenium.webdriver.common.keys import Keys
 from sqlshare_settings import settings
 
 
-        
 class DriverMethods:
 
     def get_element(self, selector, by_method = By.CSS_SELECTOR, source = None, ignore_visibility = True):
@@ -52,7 +51,7 @@ class DriverMethods:
                     elements.remove(element)
 
         return elements
-    
+
 
 class PageNavigation:
 
@@ -93,9 +92,9 @@ class PageNavigation:
         prior = -1
         while (prior != current):
             time.sleep(2)
-            prior = current            
+            prior = current
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            current = len(self.get_elements("a.sql-dataset-list-item"))            
+            current = len(self.get_elements("a.sql-dataset-list-item"))
 
 
     def open_dataset(self, dataset_name):
@@ -115,10 +114,10 @@ class GetMethods:
 
     def get_datasets(self):
         selectors = {
-            'name' : "span.sql-dataset-name",
-            'ownr' : "span.sql-dataset-owner",
-            'date' : "span.sql-dataset-modified",
-            'desc' :  "div.sql-dataset-desc",
+            'name': "span.sql-dataset-name",
+            'ownr': "span.sql-dataset-owner",
+            'date': "span.sql-dataset-modified",
+            'desc': "div.sql-dataset-desc",
         }
 
         self.scroll_to_bottom_of_datasets_page()
@@ -198,13 +197,13 @@ class GetMethods:
             except TimeoutException:
                 pass
 
-        return actions       
+        return actions
 
     def get_page_query(self):
         time.sleep(2)
         query = self.get_element("div.CodeMirror-code").text.strip()
         query = re.sub('\\n[0-9]+\\n', '\\n', query[2:])
-        query = re.sub('\\n[0-9]+$',   '\\n', query)
+        query = re.sub('\\n[0-9]+$', '\\n', query)
         return query
 
 
@@ -279,7 +278,7 @@ class PageActions:
     def search_keyword(self, keyword):
         search = self.get_element("input#dataset_search_input")
         search.clear()
-        search.send_keys(keyword + Keys.ENTER)        
+        search.send_keys(keyword + Keys.ENTER)
 
         
 class DatasetActions:
@@ -298,20 +297,27 @@ class DatasetActions:
         private = self.get_element("button#make_dataset_private")
         public  = self.get_element("button#make_dataset_public")
         for button in [private, public]:
-            if not "none" in button.get_attribute('style'):
+            if "none" not in button.get_attribute('style'):
                 privacy = self.get_element("span", source = button).text.strip()
 
 
-        return {'title':title, 'owner':owner, 'date':date, 'privacy':privacy, 'query':query, 'desc':desc}
+        retval = {
+            'title': title,
+            'owner': owner,
+            'date': date,
+            'privacy': privacy,
+            'query': query,
+            'desc': desc
+        }
+        return retval
 
     def private_public_toggle(self):
         actions = self.get_action_buttons()
-        for status in ['PUBLIC', 'PRIVATE']:            
+        for status in ['PUBLIC', 'PRIVATE']:
             if status in actions.keys():
                 actions[status].click()
                 return
 
-            
     def share_dataset(self):
         self.get_action_buttons()['SHARE'].click()
         time.sleep(3)
@@ -321,7 +327,6 @@ class DatasetActions:
 
         self.get_element("button#save_permissions_button").click()
 
-        
     def delete_dataset(self):
         self.get_action_buttons()['DELETE'].click()
         time.sleep(3)
@@ -356,7 +361,7 @@ class DatasetActions:
 
 class SQLShareSite(DriverMethods, PageNavigation, PageActions, GetMethods, DatasetActions):
     # This class combines the subclasses listed below
-    None
+    pass
 
 
 class SQLShareTests(unittest.TestCase, SQLShareSite):
@@ -381,7 +386,7 @@ class SQLShareTests(unittest.TestCase, SQLShareSite):
 
         elif self.browser == "Chrome":
             options = webdriver.ChromeOptions()
-            options.add_experimental_option("prefs", { "download.default_directory" : os.getcwd() })
+            options.add_experimental_option("prefs", {"download.default_directory": os.getcwd()})
             self.driver = webdriver.Chrome(chrome_options = options)
 
         elif self.browser == "Firefox":
