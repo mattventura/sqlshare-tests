@@ -26,7 +26,7 @@ from sqlshare_settings import settings
         
 class DriverMethods:
 
-    def get_element(self, selector, by_method=By.CSS_SELECTOR, source=None, ignore_visibility=True):
+    def get_element(self, selector, by_method = By.CSS_SELECTOR, source = None, ignore_visibility = True):
         if source is None:
             source = self.driver
             
@@ -38,7 +38,7 @@ class DriverMethods:
         return element
     
 
-    def get_elements(self, selector, by_method=By.CSS_SELECTOR, source=None, ignore_visibility=True):
+    def get_elements(self, selector, by_method = By.CSS_SELECTOR, source = None, ignore_visibility = True):
         if source is None:
             source = self.driver
             
@@ -189,11 +189,11 @@ class GetMethods:
     
 
     def get_action_buttons(self):
-        button_elements = self.get_elements("btn", by_method=By.CLASS_NAME)
+        button_elements = self.get_elements("btn", by_method = By.CLASS_NAME)
         actions = {}
         for button in button_elements:
             try:
-                action = self.get_element("span", source=button).text.strip()
+                action = self.get_element("span", source = button).text.strip()
                 actions[action] = button
             except TimeoutException:
                 pass
@@ -235,7 +235,7 @@ class PageActions:
         self.click_sidebar_link("Upload Dataset")
 
         a_element = self.get_element("a#upload_dataset_browse")
-        u_element = self.get_element("*", source=a_element)
+        u_element = self.get_element("*", source = a_element)
         self.driver.execute_script("arguments[0].style = 'display: visible;';", u_element)
         u_element.send_keys(self.filename)
         time.sleep(10)
@@ -299,7 +299,7 @@ class DatasetActions:
         public  = self.get_element("button#make_dataset_public")
         for button in [private, public]:
             if not "none" in button.get_attribute('style'):
-                privacy = self.get_element("span", source=button).text.strip()
+                privacy = self.get_element("span", source = button).text.strip()
 
 
         return {'title':title, 'owner':owner, 'date':date, 'privacy':privacy, 'query':query, 'desc':desc}
@@ -369,7 +369,7 @@ class SQLShareTests(unittest.TestCase, SQLShareSite):
             import pyvirtualdisplay
 
             if self.visible:
-                self.display = pyvirtualdisplay.Display(visible=1)
+                self.display = pyvirtualdisplay.Display(visible = 1)
             else:
                 self.display = pyvirtualdisplay.Display()
                 
@@ -382,7 +382,7 @@ class SQLShareTests(unittest.TestCase, SQLShareSite):
         elif self.browser == "Chrome":
             options = webdriver.ChromeOptions()
             options.add_experimental_option("prefs", { "download.default_directory" : os.getcwd() })
-            self.driver = webdriver.Chrome(chrome_options=options)
+            self.driver = webdriver.Chrome(chrome_options = options)
 
         elif self.browser == "Firefox":
             profile = webdriver.FirefoxProfile()
@@ -391,7 +391,7 @@ class SQLShareTests(unittest.TestCase, SQLShareSite):
             profile.set_preference("browser.download.dir", os.getcwd())
             profile.set_preference("browser.helperApps.neverAsk.saveToDisk", 'text/csv')
 
-            self.driver = webdriver.Firefox(firefox_profile=profile)
+            self.driver = webdriver.Firefox(firefox_profile = profile)
             
         else:
             self.driver = getattr(webdriver, self.browser)()
